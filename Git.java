@@ -162,9 +162,9 @@ public static void updateIndex(File file) throws IOException, NoSuchAlgorithmExc
 
     String line;
     if (index.length() == 0) {
-        line = sha + " " + file.getName();
+        line = sha + " " + file.getPath();
     } else {
-        line = "\n" + sha + " " + file.getName();
+        line = "\n" + sha + " " + file.getPath();
     }
 
     try (FileWriter writer = new FileWriter(index, true)) {
@@ -173,7 +173,5 @@ public static void updateIndex(File file) throws IOException, NoSuchAlgorithmExc
 
     System.out.println("Added to index: " + file.getName());
 }
-
-
 
 }
