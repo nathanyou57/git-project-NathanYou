@@ -218,4 +218,29 @@ public class Git {
         }
         return null;
     }
+
+    // methods working list operations
+
+    public static boolean createWorkingList() throws IOException {
+        File objectsDir = new File("./git/objects");
+        File workingList = new File(objectsDir.getPath() + "/workingList");
+        workingList.createNewFile();
+        File indexFile = new File("./git/index");
+        BufferedReader br = new BufferedReader(new FileReader(indexFile));
+        BufferedWriter bw = new BufferedWriter(new FileWriter(workingList, true));
+        int iteration = 0;
+        while (br.ready()) {
+            String line = br.readLine();
+            if (iteration == 0)
+                bw.write((new File(line.substring(line.indexOf(" "), line.length())).isDirectory() ? "tree " : "blob ")
+                        + line);
+            else
+                bw.write("\n" + (new File(line.substring(line.indexOf(" "), line.length())).isDirectory() ? "tree "
+                        : "blob ") + line);
+            iteration++;
+        }
+        br.close();
+        bw.close();
+        return true;
+    }
 }

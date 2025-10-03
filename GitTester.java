@@ -270,6 +270,7 @@ public class GitTester {
         } else {
             System.out.println("Tree creation doesn't work");
         }
+        Git.createWorkingList();
 
     }
 
