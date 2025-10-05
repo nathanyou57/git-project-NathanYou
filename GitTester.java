@@ -227,50 +227,90 @@ public class GitTester {
         }
     }
 
-    // methods test making trees for directories
     public static void makeTreeTester() throws IOException, NoSuchAlgorithmException {
         cleanUp();
 
-        String dirName = "./git/testDir";
-        File dir = new File(dirName);
-        if (!dir.exists()) {
-            dir.mkdir();
-        }
-        // dirName = "./git/testDir/dir1";
-        // File dir1 = new File(dirName);
-        // if (!dir1.exists()) {
-        // dir1.mkdir();
-        // }
+        String Dir = "./testProject";
+        String Dir1 = Dir + "/src";
+        String Dir2 = Dir + "/src/main";
+        String Dir3 = Dir + "/docs";
 
-        String[] filenames = { "a.txt", "b.txt" };
-        String[] contents = {
-                "Content of file 1",
-                "Content of file 2"
+        new File(Dir).mkdir();
+        new File(Dir1).mkdir();
+        new File(Dir2).mkdir();
+        new File(Dir3).mkdir();
+
+        String[][] fileData = {
+                { Dir + "/README.md", "randrandrandrand" },
+                { Dir1 + "/wasteoftime.java",
+                        "public class wasteoftime {\n//I Wasted my time writing this \n}" },
+                { Dir2 + "/moretimewasted.java",
+                        "public class moretimewasted {\n    // I wasted even more time\n}" },
+                { Dir2 + "/evenmoretimewasted.java",
+                        "public class evenmoretimewasted {\n    // I wasted even more time than before\n}" },
+                { Dir3 + "/somuchtimewastedonthistester.txt", "blahblahblahblah" }
         };
 
-        for (int i = 0; i < filenames.length; i++) {
-            File file = new File(dirName + "/" + filenames[i]);
+        for (String[] fileInfo : fileData) {
+            File file = new File(fileInfo[0]);
             file.createNewFile();
             BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-            bw.write(contents[i]);
+            bw.write(fileInfo[1]);
             bw.close();
-            Git.makeBlob(dirName + "/" + filenames[i]);
-            Git.updateIndex(new File(dirName + "/" + filenames[i]));
+            Git.makeBlob(fileInfo[0]);
+            Git.updateIndex(file);
+            System.out.println("Created and indexed: " + fileInfo[0]);
         }
 
-        String treeSHA = Git.storeTree(dirName);
+        String indexContent = Git.readFile("./git/index");
+        System.out.println(indexContent);
 
-        if (treeSHA != null) {
+        boolean workingListCreated = Git.createWorkingList();
+        if (workingListCreated) {
+            String workingListContent = Git.readFile("./git/objects/workingList");
+            System.out.println("Initial working list content:");
+            System.out.println(workingListContent);
+        }
+
+        int iteration = 1;
+        String treeSHA;
+
+        while ((treeSHA = Git.processWorkingList()) != null) {
+            System.out.println("Iteration " + iteration + ":");
+            System.out.println("  Created tree with SHA: " + treeSHA);
+
             File treeFile = new File("./git/objects/" + treeSHA);
             if (treeFile.exists()) {
-                System.out.println("Tree creation works");
-            } else {
-                System.out.println("Tree creation doesn't work");
+                String treeContent = Git.readFile("./git/objects/" + treeSHA);
+                System.out.println("  Tree content:");
+                String[] lines = treeContent.split("\n");
+                for (String line : lines) {
+                    System.out.println("    " + line);
+                }
             }
-        } else {
-            System.out.println("Tree creation doesn't work");
+
+            File workingListFile = new File("./git/objects/workingList");
+            if (workingListFile.exists() && workingListFile.length() > 0) {
+                String remainingContent = Git.readFile("./git/objects/workingList");
+                System.out.println("  Remaining in working list:");
+                String[] remainingLines = remainingContent.split("\n");
+                for (String line : remainingLines) {
+                    if (!line.trim().isEmpty()) {
+                        System.out.println("    " + line);
+                    }
+                }
+            } else {
+                System.out.println("  Working list is now empty");
+                break;
+            }
+
+            iteration++;
+            System.out.println();
+
+            if (iteration > 10) {
+                break;
+            }
         }
-        Git.createWorkingList();
 
     }
 

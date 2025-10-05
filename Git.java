@@ -182,14 +182,10 @@ public class Git {
     public static String storeTree(String directoryPath) {
         File dir = new File(directoryPath);
         if (!dir.isDirectory()) {
-            System.out.println("The path " + directoryPath + " is not a directory.");
             return null;
         }
         StringBuilder treeContent = new StringBuilder();
         File[] files = dir.listFiles();
-        for (File file : files) {
-            System.out.println(file.getPath());
-        }
         if (files != null) {
             for (File file : files) {
                 try {
@@ -197,24 +193,27 @@ public class Git {
                         treeContent.append("\n");
                     }
                     String fileType = file.isDirectory() ? "tree" : "blob";
-                    String fileSHA = file.isDirectory() ? storeTree(file.getPath()) : SHA1(readFile(file.getPath()));
+                    String fileSHA;
+                    if (file.isDirectory()) {
+                        fileSHA = storeTree(file.getPath());
+                    } else {
+                        makeBlob(file.getPath());
+                        fileSHA = SHA1(readFile(file.getPath()));
+                    }
                     treeContent.append(fileType).append(" ").append(fileSHA).append(" ").append(file.getName());
-                    System.out.println(treeContent.toString());
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
             try {
-                createFile("tempTreeFile", treeContent.toString());
-                makeBlob("tempTreeFile");
-                File tempTreeFile = new File("tempTreeFile");
-                tempTreeFile.delete();
+                String treeSHA = SHA1(treeContent.toString());
+                createFile("./git/objects/" + treeSHA, treeContent.toString());
+                return treeSHA;
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-            return SHA1(treeContent.toString());
         }
         return null;
     }
@@ -222,25 +221,101 @@ public class Git {
     // methods working list operations
 
     public static boolean createWorkingList() throws IOException {
-        File objectsDir = new File("./git/objects");
-        File workingList = new File(objectsDir.getPath() + "/workingList");
+        File workingList = new File("./git/objects/workingList");
         workingList.createNewFile();
         File indexFile = new File("./git/index");
         BufferedReader br = new BufferedReader(new FileReader(indexFile));
-        BufferedWriter bw = new BufferedWriter(new FileWriter(workingList, true));
-        int iteration = 0;
-        while (br.ready()) {
-            String line = br.readLine();
-            if (iteration == 0)
-                bw.write((new File(line.substring(line.indexOf(" "), line.length())).isDirectory() ? "tree " : "blob ")
-                        + line);
-            else
-                bw.write("\n" + (new File(line.substring(line.indexOf(" "), line.length())).isDirectory() ? "tree "
-                        : "blob ") + line);
-            iteration++;
+        BufferedWriter bw = new BufferedWriter(new FileWriter(workingList));
+        String line;
+        boolean first = true;
+        while ((line = br.readLine()) != null) {
+            if (!first) {
+                bw.write("\n");
+            }
+            bw.write("blob " + line);
+            first = false;
         }
         br.close();
         bw.close();
         return true;
+    }
+
+    public static String processWorkingList() {
+        File workingList = new File("./git/objects/workingList");
+        if (!workingList.exists()) {
+            return null;
+        }
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(workingList));
+            String line;
+            String deepestDirPath = null;
+            int maxDepth = -1;
+
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(" ", 3);
+                if (parts.length >= 3) {
+                    String filePath = parts[2];
+                    File file = new File(filePath);
+                    String path = file.getPath().replace("\\", "/");
+                    int depth = path.split("/").length;
+                    if (depth > maxDepth) {
+                        maxDepth = depth;
+                        deepestDirPath = file.getParent();
+                    }
+                }
+            }
+            br.close();
+
+            if (deepestDirPath != null) {
+                File currentDir = new File(".").getAbsoluteFile();
+                File deepestDir = new File(deepestDirPath).getAbsoluteFile();
+
+                if (deepestDir.equals(currentDir)) {
+                    return null;
+                }
+
+                String treeSHA = storeTree(deepestDirPath);
+
+                BufferedReader br2 = new BufferedReader(new FileReader(workingList));
+                StringBuilder newWorkingList = new StringBuilder();
+                boolean foundTreeEntry = false;
+
+                while ((line = br2.readLine()) != null) {
+                    if (line.trim().isEmpty())
+                        continue;
+                    String[] parts = line.split(" ", 3);
+                    if (parts.length >= 3) {
+                        String filePath = parts[2];
+                        File file = new File(filePath);
+
+                        if (deepestDirPath.equals(file.getParent())) {
+                            if (!foundTreeEntry) {
+                                if (newWorkingList.length() > 0) {
+                                    newWorkingList.append("\n");
+                                }
+                                newWorkingList.append("tree ").append(treeSHA).append(" ").append(deepestDirPath);
+                                foundTreeEntry = true;
+                            }
+                        } else {
+                            if (newWorkingList.length() > 0) {
+                                newWorkingList.append("\n");
+                            }
+                            newWorkingList.append(line);
+                        }
+                    }
+                }
+                br2.close();
+
+                BufferedWriter bw = new BufferedWriter(new FileWriter(workingList));
+                bw.write(newWorkingList.toString());
+                bw.close();
+
+                return treeSHA;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
