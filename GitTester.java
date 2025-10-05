@@ -27,7 +27,7 @@ public class GitTester {
         makeTreeTester();
 
         // TEST 5
-        reset(true);
+        // reset(true);
     }
 
     // methods test initialize repository
