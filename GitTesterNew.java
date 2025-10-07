@@ -8,7 +8,7 @@ import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
-public class GitTester {
+public class GitTesterNew {
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
         // TEST 1
         Git.initializeRepo();
@@ -27,7 +27,7 @@ public class GitTester {
         makeTreeTester();
 
         // TEST 5
-        // reset(true);
+        reset(true);
     }
 
     // methods test initialize repository
