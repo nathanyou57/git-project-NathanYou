@@ -11,8 +11,13 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.zip.DeflaterOutputStream;
+import java.util.Calendar;
+import java.text.SimpleDateFormat;
 
 public class Git {
+
+    public static final String DATE_FORMAT_NOW = "yyyy-MM-dd HH:mm:ss";
+
     // methods INITIALIZING A REPOSITORY
     public static void initializeRepo() throws java.io.IOException {
         java.io.File gitDir = new java.io.File("./git");
@@ -303,7 +308,8 @@ public class Git {
         rootTreeWriter.write(workingListContents);
         rootTreeWriter.close();
     }
-//arbitrary change
+
+    // arbitrary change
     /*
      * Generates all tree objects from the working list until only one tree remains.
      * 
