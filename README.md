@@ -1,0 +1,2 @@
+Technically there was no README.md so this very file is the addition of a missing functionality.
+The only other thing I added that was missing was the creation of the root tree file, which seemed to already have been made up until the point of the actual file creation, huh.
