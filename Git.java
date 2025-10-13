@@ -333,7 +333,7 @@ public class Git {
     public static String commit(String author, String message) throws IOException {
         StringBuilder commitContentsStringBuilder = new StringBuilder();
         String rootTreeHash = generateAllTrees();
-        commitContentsStringBuilder.append("tree: " + rootTreeHash);
+        commitContentsStringBuilder.append("tree: " + rootTreeHash + " (root)");
         BufferedReader headReader = new BufferedReader(new FileReader("./git/HEAD"));
         String parentCommitHash = headReader.readLine();
         if (parentCommitHash == null) {
