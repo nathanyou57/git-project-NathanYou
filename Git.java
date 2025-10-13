@@ -297,6 +297,13 @@ public class Git {
         return null;
     }
 
+    public static void createRootTreeFile(String workingListContents, String rootTreeSHA) throws IOException {
+        File rootTree = new File("git/objects/" + rootTreeSHA);
+        FileWriter rootTreeWriter = new FileWriter(rootTree);
+        rootTreeWriter.write(workingListContents);
+        rootTreeWriter.close();
+    }
+//arbitrary change
     /*
      * Generates all tree objects from the working list until only one tree remains.
      * 
