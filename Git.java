@@ -303,7 +303,7 @@ public class Git {
         rootTreeWriter.write(workingListContents);
         rootTreeWriter.close();
     }
-
+//arbitrary change
     /*
      * Generates all tree objects from the working list until only one tree remains.
      * 
