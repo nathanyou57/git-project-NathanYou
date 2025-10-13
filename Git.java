@@ -323,4 +323,44 @@ public class Git {
             return null;
         }
     }
+
+    public static String commit(String author, String message) throws IOException {
+        StringBuilder commitContentsStringBuilder = new StringBuilder();
+        String rootTreeHash = generateAllTrees();
+        commitContentsStringBuilder.append("tree: " + rootTreeHash);
+        BufferedReader headReader = new BufferedReader(new FileReader("./git/HEAD"));
+        String parentCommitHash = headReader.readLine();
+        if (parentCommitHash == null) {
+            parentCommitHash = "";
+        }
+        commitContentsStringBuilder.append("\nparent: " + parentCommitHash);
+        headReader.close();
+        commitContentsStringBuilder.append("\nauthor: " + author);
+        String date = now();
+        commitContentsStringBuilder.append("\ndate: " + date);
+        commitContentsStringBuilder.append("\nmessage: " + message);
+        String commitContents = commitContentsStringBuilder.toString();
+        String hashOfCommitContents = SHA1(commitContents);
+        File commit = new File("git/objects/" + hashOfCommitContents);
+        commit.createNewFile();
+        FileWriter commitWriter = new FileWriter(commit);
+        commitWriter.write(commitContents);
+        commitWriter.close();
+        updateHead(hashOfCommitContents);
+        return hashOfCommitContents;
+    }
+
+    public static String now() throws IOException {
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT_NOW);
+        return sdf.format(cal.getTime());
+    }
+
+    public static void updateHead(String hashOfCommitContents) throws IOException {
+        File head = new File("./git/HEAD");
+        FileWriter headWriter = new FileWriter(head);
+        headWriter.write(hashOfCommitContents);
+        headWriter.close();
+    }
+
 }
